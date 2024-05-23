@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stylite Player Graph</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color:#1f1c2d;
+            background-size: cover;
+            background-position: center;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: rgba(40, 42, 70, 0.82); /* Black background with transparency */
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(255, 21, 122, 0.794);
+            padding: 40px;
+            width: 95%;
+            max-width: 600px;
+            margin: 10px;
+            text-align: center; /* Center align content */
+        }
+
+        h1 {
+            color: #ffffff;
+            margin-bottom: 10px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Nice font */
+        }
+
+        .description {
+            color: #888888; /* Grey font color */
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        canvas {
+            display: block;
+            margin: 0 auto;
+        }
+
+        .play-button,
+        .discord-button {
+            display: inline-block;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            text-decoration: none;
+            font-size: 18px;
+            font-weight: bold;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Nice font */
+        }
+
+        .play-button {
+            background-color: #ff3075;
+            color: #fff;
+            margin-right: 10px;
+        }
+
+        .play-button:hover {
+            background-color: #ed24a3;
+        }
+
+        .discord-button {
+            background-color: #7289da; /* Discord color */
+            color: #fff;
+        }
+
+        .discord-button:hover {
+            background-color: #677bc4; /* Darker shade on hover */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Stylite Player Graph</h1>
+        <p class="description">The official player graph for Stylite</p>
+        <canvas id="playerCountChart" width="400" height="200"></canvas>
+        <a href="https://vectaria.io/link/5NFC53QB" class="play-button" target="_blank" rel="noopener noreferrer">Play Stylite</a>
+        <a href="https://discord.gg/fVcXe4Rh" class="discord-button" target="_blank" rel="noopener noreferrer">Discord</a>
+    </div>
+    <script>
+        async function fetchPlayerCount() {
+            console.time('fetchPlayerCount');
+            const response = await fetch('/api/playercount');
+            const data = await response.json();
+            console.timeEnd('fetchPlayerCount');
+            return data.playersCount;
+        }
+
+        async function fetchAndRenderChart() {
+            let playerCount = localStorage.getItem('playerCount');
+            if (!playerCount) {
+                playerCount = await fetchPlayerCount();
+                localStorage.setItem('playerCount', playerCount);
+            }
+
+            const ctx = document.getElementById('playerCountChart').getContext('2d');
+            const chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [''],
+                    datasets: [{
+                        label: 'Number of Players',
+                        data: [playerCount],
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderColor: '#ff3075',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: '#fff' // Y-axis color set to white
+                            },
+                            ticks: {
+                                color: '#ff0a7c' // Y-axis ticks color set to white
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+
+            setInterval(async () => {
+                console.time('updateChart');
+                playerCount = await fetchPlayerCount();
+                localStorage.setItem('playerCount', playerCount);
+                chart.data.labels.push('');
+                chart.data.datasets[0].data.push(playerCount);
+                chart.update();
+                console.timeEnd('updateChart');
+            }, 10000);
+        }
+
+        fetchAndRenderChart();
+    </script>
+</body>
+</html>
